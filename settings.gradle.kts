@@ -33,3 +33,5 @@ property("localDarklaf")?.ifBlank { "../darklaf" }?.let {
     println("Importing project '$it'")
     includeBuild(it)
 }
+
+include("build-logic")

@@ -33,15 +33,21 @@ public final class JarIO {
 
   public static byte[] transformClazz(byte[] bytes) throws software.coley.cafedude.InvalidClassException {
 
-    // Use Cafedude to strip attributes
-    ClassFileReader reader = new ClassFileReader();
-    ClassFile classFile = reader.read(bytes);
-    // Modifies the 'cf' instance
-    new IllegalStrippingTransformer(classFile).transform();
-    byte[] strippedBytecode = new ClassFileWriter().write(classFile);
+    try {
+      // Use Cafedude to strip attributes
+      ClassFileReader reader = new ClassFileReader();
+      ClassFile classFile = reader.read(bytes);
+      // Modifies the 'cf' instance
+      new IllegalStrippingTransformer(classFile).transform();
+      byte[] strippedBytecode = new ClassFileWriter().write(classFile);
 
-    // Return a new Clazz object
-    return strippedBytecode;
+      // Return a new Clazz object
+      return strippedBytecode;
+    } catch (software.coley.cafedude.InvalidClassException e) {
+      // 如果 Cafedude 无法读取该类文件（例如，Java 21 的 class 文件版本），直接返回原始字节码
+      LogWrapper.logger.warning("Could not transform class file, returning original bytecode: {}", e.getMessage());
+      return bytes;
+    }
   }
 
   private static ArrayList<Clazz> readEntry(JarFile jar, JarEntry en, ArrayList<Clazz> classes) {
@@ -50,7 +56,8 @@ public final class JarIO {
       byte[] bytes = (IOUtils.toByteArray(jis));
       if (isClassFile(bytes)) {
         try {
-          final ClassNode cn = Conversion.toNode(transformClazz(bytes));
+          byte[] transformedBytes = transformClazz(bytes);
+          final ClassNode cn = Conversion.toNode(transformedBytes);
 
           if (cn != null && (cn.superName != null || (cn.name != null && cn.name.equals("java/lang/Object")))) {
             // transform using cafedood
@@ -60,6 +67,13 @@ public final class JarIO {
               LogWrapper.logger.error("Failed to transform class {}", e, name);
             }
 
+          }
+        } catch (IllegalArgumentException e) {
+          // 处理不支持的 class 文件版本
+          if (e.getMessage() != null && e.getMessage().contains("Unsupported class file major version")) {
+            LogWrapper.logger.warning("Skipped unsupported class file version: {} - {}", name, e.getMessage());
+          } else {
+            LogWrapper.logger.error("Failed to load file {}", e, name);
           }
         } catch (Exception e) {
           LogWrapper.logger.error("Failed to load file {}", e, name);

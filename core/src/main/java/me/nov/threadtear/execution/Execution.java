@@ -1,5 +1,6 @@
 package me.nov.threadtear.execution;
 
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.BiConsumer;
 
@@ -160,9 +161,17 @@ public abstract class Execution implements Opcodes {
   }
 
   protected void allowReflection(boolean allow) {
-    SecurityManager sm = System.getSecurityManager();
-    if (sm != null) {
-      ((VMSecurityManager) sm).allowReflection(allow);
+    try {
+      // 等价于：SecurityManager sm = System.getSecurityManager();
+      // 但不直接引用以避免 @Deprecated(forRemoval) 警告。
+      Method m = System.class.getDeclaredMethod("getSecurityManager");
+      Object sm = m.invoke(null);
+
+      if (sm instanceof VMSecurityManager) {
+        ((VMSecurityManager) sm).allowReflection(allow);
+      }
+    } catch (Throwable ignored) {
+      // 没有 SecurityManager / 被禁止反射 / JDK 行为差异：都直接忽略
     }
   }
 }

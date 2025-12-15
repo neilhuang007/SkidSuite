@@ -37,8 +37,13 @@ public final class Conversion {
       try {
         cr.accept(cn, ClassReader.SKIP_FRAMES | ClassReader.SKIP_DEBUG);
       } catch (Exception e2) {
-        e2.printStackTrace();
-        LogWrapper.logger.error("Failed to load class ", e2);
+        try {
+          // 最后的尝试：使用 SKIP_CODE 标志，可以处理不兼容的 class 文件版本
+          cr.accept(cn, ClassReader.SKIP_FRAMES | ClassReader.SKIP_DEBUG | ClassReader.SKIP_CODE);
+        } catch (Exception e3) {
+          e3.printStackTrace();
+          LogWrapper.logger.error("Failed to load class ", e3);
+        }
       }
     }
     return cn;

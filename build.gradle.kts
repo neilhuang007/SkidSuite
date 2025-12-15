@@ -62,8 +62,15 @@ allprojects {
 
     plugins.withType<JavaPlugin> {
         configure<JavaPluginExtension> {
-            sourceCompatibility = JavaVersion.toVersion(19)
-            targetCompatibility = JavaVersion.toVersion(19)
+            toolchain {
+                languageVersion.set(JavaLanguageVersion.of(21))
+            }
+        }
+
+        tasks.withType<JavaCompile>().configureEach {
+            options.encoding = "UTF-8"
+            // 可选：明确 release（更严格）
+            options.release.set(21)
         }
 
         if (!skipAutostyle) {

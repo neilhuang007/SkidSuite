@@ -1,6 +1,7 @@
 plugins {
     `java-library`
-    id("com.github.johnrengelman.shadow")
+//    id("com.github.johnrengelman.shadow")
+    id("com.gradleup.shadow") version "9.0.0-beta12"
 }
 
 dependencies {
@@ -29,15 +30,15 @@ tasks.shadowJar {
     manifest {
         attributes["Main-Class"] = "me.nov.threadtear.Threadtear"
     }
-    transform(LicenseTransformer::class.java) {
-        destinationPath = "META-INF/licenses/LICENSES.txt"
-        include("META-INF/LICENSE", "META-INF/LICENSE.txt")
-        exclude("META-INF/THREADTEAR_LICENSE")
-    }
-    transform(LicenseTransformer::class.java) {
-        destinationPath = "META-INF/licenses/NOTICES.txt"
-        include("META-INF/NOTICE", "META-INF/NOTICE.txt")
-    }
+//    transform(LicenseTransformer::class.java) {
+//        destinationPath = "META-INF/licenses/LICENSES.txt"
+//        include("META-INF/LICENSE", "META-INF/LICENSE.txt")
+//        exclude("META-INF/THREADTEAR_LICENSE")
+//    }
+//    transform(LicenseTransformer::class.java) {
+//        destinationPath = "META-INF/licenses/NOTICES.txt"
+//        include("META-INF/NOTICE", "META-INF/NOTICE.txt")
+//    }
     //relocate("META-INF", "META-INF/licenses") {
     //    includes.addAll(listOf(
     //        "META-INF/*LICENSE*",
@@ -76,6 +77,6 @@ val runGui by tasks.registering(JavaExec::class) {
 
     workingDir = File(project.rootDir, "dist")
     workingDir.mkdir()
-    main = "me.nov.threadtear.Threadtear"
+    mainClass.set("me.nov.threadtear.Threadtear")
     classpath = files("$rootDir/dist/threadtear-${project.version}.jar")
 }
